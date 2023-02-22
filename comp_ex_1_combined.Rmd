@@ -139,6 +139,7 @@ ggplot(dfVar, aes(x = lambdas, y = var)) +
   xlab(expression(lambda)) +
   ylab("variance")
 ```
+
 ### Part G
 ```{r}
 exp_mse <- VAR + BIAS + sigma**2
@@ -256,6 +257,7 @@ ggplot(data.frame(r2=estimator), aes(x=r2)) +
   ggtitle("R2 Distribution from Bootstrap on Salaries") +
   theme_minimal()
 ```
+
 iii.
 ```{r}
 sd(estimator)
@@ -270,7 +272,10 @@ This analysis bodes very well for the degree to which our model can predict the 
 
 
 ### Part F
-Below is Bert-Ernie's incorrect code:
+
+i. 
+
+Below is Bert-Ernie's code, corrected:
 ```{r}
 # Make a data frame containing two new observations, corresponding to
 # Bert-Ernie's two possible futures
@@ -289,8 +294,6 @@ preds
 # Check if lower limit for salary in a theoretical field is large enough
 preds[1, 2] > 75000
 ```
-
-i.
 
 ii. Analytical expression for the prediction interval: 
 $$
@@ -362,30 +365,45 @@ test <- bigfoot[-train_ind, ]
 ### Part A
 
 i.
-Here we fit a QDA model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
+Here we fit a logistic model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
 ```{r}
 bigfoot_logistic <- glm(class ~ ., data = train, family = binomial)
 
 bigfoot_logistic_test_probs <- predict(bigfoot_logistic, newdata= test, type = "response")
-bigfoot_logistic_test_pred <- bigfoot_logistic_test_probs > .5
-table(bigfoot_logistic_test_pred, test$class)
+bigfoot_logistic_pred <- rep(0, length(test$class))
+bigfoot_logistic_pred[bigfoot_logistic_test_probs > .5] <- 1
+
+logistic_confusion <- table(bigfoot_logistic_pred, test$class)
+
+rownames(logistic_confusion) <- c('pred B','pred A')
+
+colnames(logistic_confusion) <- c('true B','true A')
+
+logistic_confusion
 ```
 
 ii. We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
 
-## Part B
+### Part B
 
 i. The following code implements a QDA model:
 ```{r}
 require(MASS)
 bigfoot_qda <- qda(class ~ ., data = train)
 bigfoot_qda_test_probs <- predict(bigfoot_qda, test)
-bigfoot_qda_class <- predict(bigfoot_qda, test)$class
-table(bigfoot_qda_class, test$class)
+bigfoot_qda_pred <- predict(bigfoot_qda, test)$class
+
+qda_confusion <- table(bigfoot_qda_pred, test$class)
+
+rownames(qda_confusion) <- c('pred B','pred A')
+
+colnames(qda_confusion) <- c('true B','true A')
+
+qda_confusion
 
 ```
 
-We note that 447 observations in the test set were identified as class "A", of which 389 were correct identifications. 
+We note that 626 observations in the test set were identified as class "A", of which 389 were correct identifications. 
 
 ii. 
 
@@ -397,29 +415,35 @@ ii.
 
 4. False: QDA does not have observations with a common mean vector. 
 
-## Part C
+### Part C
 
 i.
 The code below implements KNN classification for k=25. 
 ```{r}
 bigfoot_knn_pred <- knn(train=train, test=test, cl=train$class, k = 25, prob = TRUE)
-table(bigfoot_knn_pred, test$class)
+knn_confusion <- table(bigfoot_knn_pred, test$class)
+
+rownames(knn_confusion) <- c('pred B','pred A')
+
+colnames(knn_confusion) <- c('true B','true A')
+
+knn_confusion
 ```
 
 ii. We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
 
-## Part D
+### Part D
 
 i. In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
 
 ii. 
 ```{r}
-# logistic model confusion table
-logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
-# QDA model confusion table
-qda_confusion <- table(bigfoot_qda_class, test$class)
-# KNN model confusion table
-knn_confusion <- table(bigfoot_knn_pred, test$class)
+# # logistic model confusion table
+# logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
+# # QDA model confusion table
+# qda_confusion <- table(bigfoot_qda_class, test$class)
+# # KNN model confusion table
+# knn_confusion <- table(bigfoot_knn_pred, test$class)
 
 
 logistic_sensitivity <- logistic_confusion[2,2] / sum(logistic_confusion[,2])
@@ -462,7 +486,7 @@ bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
 
 ## Problem 4
 
-## Part A
+### Part A
 
 Not finished with the markup, needs to be made "prettier". Also, may need to show that the matrix is invertible in order to use Shermans formula... Math is correct though
 
@@ -498,7 +522,7 @@ Finally, the LOOCV is calculated by the RSS of the error, so:
 $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
 
 
-## Part B
+### Part B
 
 i. False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
 
