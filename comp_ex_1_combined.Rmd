@@ -1,0 +1,521 @@
+---
+title: "Compulsory Exercise 1"
+authors: "Chester Henry Charlton, Kasper, Tinus"
+date: '2023-02-08'
+output: html_document
+---
+## Setup
+```{r, include=FALSE}
+require("knitr") 
+require("ggplot2") 
+require("dplyr")
+require("tidyr") 
+require("carData")
+require("class")
+require("pROC") 
+require("plotROC") 
+require("ggmosaic")
+```
+TO DO:
+2.a.ii
+2.b
+2.f.ii
+4.a (finish)
+
+
+## Problem 1
+
+### Part A
+We calculate the expected value of $\tilde{\beta}$ as follows:
+\begin{align}
+E(\tilde{\beta}) &= E[(X^TX+\lambda I)^{-1} X^T Y] \\
+                 &= (X^TX+\lambda I)^{-1} X^T E(Y) \\
+               Y &= X\beta + e \\
+             E(Y)&= E(X\beta + e) \\
+                 &= X\beta \\
+E(\tilde{\beta}) &= (X^TX+\lambda I)^{-1} X^T X \beta
+\end{align}
+Furthermore, we calculate the variance-covariance of $\tilde{\beta}$ as follows:
+We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\boldsymbol \varepsilon}) = \text{Var}({\boldsymbol \varepsilon}) = \sigma^2$. Defining ${\bf W} = (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1}$ we compute the variance-covariance matrix $\text{Var}(\tilde{\boldsymbol \beta})$ as
+
+\begin{aligned}
+\text{Var}(\tilde{\boldsymbol \beta}) 
+&= \text{Var}({\bf W}\mathbf{X}^\top {\bf Y} ) \\
+&= {\bf W}\mathbf{X}^\top \text{Var}({\bf Y})({\bf W}\mathbf{X}^\top)^\top \\
+&= \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W}
+\end{aligned}
+
+since ${\bf W}$ is symmetric.
+
+### Part B
+Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have that 
+\begin{aligned}
+\text{E}(\tilde{f}({\bf x_0})) 
+&= {\bf x_0}^\top \text{E}(\tilde{\boldsymbol \beta})  \\
+&= {\bf x_0}^\top (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top\mathbf{X} {\boldsymbol \beta}  \\
+\end{aligned}
+
+and
+
+\begin{aligned}
+\text{Var}(\tilde{f}({\bf x_0}) 
+&= {\bf x_0}^\top \text{Var}(\tilde{\boldsymbol \beta}) {\bf x_0} \\
+&= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0}
+\end{aligned}
+
+### Part C
+
+Bias is interpreted as follows: Whenever we fit a model to data, it can either be underfit or overfit in relation to to the true form of where the data is originating. In this sense, bias occurs when we underfit, using a simpler model such as linear regression to approximate a complex system in reality. 
+
+Variance is closely related to this, occurring most characteristically when we overfit our model. This could occur if the true form of the system was quadratic but we fit a higher order polynomial in an attempt to match the data. This results in a model that fits to too much of the "noise" in the data and thus does not fare well on the test set. Another way of thinking of it is the degree to which our model "varies" depending on small changes in the training data. This is leads to the correct conclusion that more complex models have more variance than simpler models. 
+
+Irreducible error is the "noise" in our data that results from the fact that our sample data is being drawn from some distribution. This means that we expect even a "perfect" model to have test error since with noise in the data, the random error cannot and should not be fitted to. Otherwise, the model will be overfitted.
+
+### Part D
+We can calculate the mean squared error of a particular observation by decomposing it as the sum of the variance, squared bias, and standard deviation at a particular point. We already have expressions for the variance from part b and the standard deviation is known. Therefore, we need only derive the expression for the squared bias at a particular point, and then substitute.
+\begin{align}
+Bias^2 &= E(y_0 - \tilde{f}(x_0))\\
+&= x_0^T \beta - x_0^T E(\beta)\\
+MSE(Y-\hat{Y}) &= Var(\hat{Y}) + Bias^2(\hat{Y}) + Var(\epsilon) \\
+               &= Var(\vec{x}_0^T \tilde{\beta}) + Bias^2(\vec{x}_0^T \tilde{\beta}) + Var(\epsilon)\\
+               &= W \sigma^2 W^T + Bias^2(\vec{x}_0^T \tilde{\beta}) + \sigma^2 \\
+        
+\end{align}
+
+
+
+
+```{r, include=FALSE}
+id <- "1X_8OKcoYbng1XvYFDirxjEWr7LtpNr1m" # google file ID
+values <- dget(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
+
+X <- values$X
+dim(X)
+
+x0 <- values$x0
+dim(x0)
+
+beta <- values$beta
+dim(beta)
+
+sigma <- values$sigma
+sigma
+```
+
+### Part E
+
+```{r}
+library(ggplot2)
+bias <- function(lambda, X, x0, beta) {
+  p <- ncol(X)
+  value <- (t(x0) %*% beta - t(x0) %*% (solve(t(X)%*%X + lambda * diag(p)) %*% (t(X) %*% X) %*% beta))**2
+  return(value)
+}
+lambdas <- seq(0, 2, length.out = 500)
+BIAS <- rep(NA, length(lambdas))
+for (i in seq_along(lambdas)) BIAS[i] <- bias(lambdas[i], X, x0, beta)
+dfBias <- data.frame(lambdas = lambdas, bias = BIAS)
+ggplot(dfBias, aes(x = lambdas, y = bias)) +
+  geom_line(color = "hotpink") +
+  xlab(expression(lambda)) +
+  ylab(expression(bias^2))
+```
+
+### Part F
+```{r}
+variance <- function(lambda, X, x0, sigma) {
+  p <- ncol(X)
+  inv <- solve(t(X) %*% X + lambda * diag(p))
+  W <- solve((t(X) %*% X) + (lambda * diag(p))) %*% t(X)
+  value <- (sigma**2)* t(x0) %*% (W) %*% t(W) %*% (x0)
+  return(value)
+}
+lambdas <- seq(0, 2, length.out = 500)
+VAR <- rep(NA, length(lambdas))
+for (i in seq_along(lambdas)) VAR[i] <- variance(lambdas[i], X, x0, sigma)
+dfVar <- data.frame(lambdas = lambdas, var = VAR)
+ggplot(dfVar, aes(x = lambdas, y = var)) +
+  geom_line(color = "gold") +
+  xlab(expression(lambda)) +
+  ylab("variance")
+```
+### Part G
+```{r}
+exp_mse <- VAR + BIAS + sigma**2
+lambdas[which.min(exp_mse)]
+
+dfMSE <- data.frame(lambdas = lambdas, MSE = exp_mse)
+dfVarBiasMSE <- cbind(dfVar,dfBias$bias, dfMSE$MSE)
+
+ggplot(dfVarBiasMSE, aes(x=lambdas)) +
+         geom_line(aes(y = var, color = "var")) + 
+         geom_line(aes(y = dfBias$bias, color = "bias")) +
+         geom_line(aes(y = dfMSE$MSE, color = "mse"))
+```
+
+
+## Problem 2
+```{r}
+library(carData)
+GGally::ggpairs(Salaries)
+
+# Fit full model
+model1 <- lm(salary ~ ., data = Salaries)
+summary(model1)
+
+
+```
+
+### Part A
+
+i. The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
+
+ii. 
+```{r}
+# var.test()
+```
+
+### Part B
+
+```{r}
+sex_model <- lm(salary ~ sex, data = Salaries)
+summary(sex_model)
+```
+
+### Part C
+
+```{r}
+library(ggplot2)
+library(ggfortify)
+autoplot(model1, smooth.colour = NA)
+```
+
+i. For robust linear regression, the following assumptions must be satisfied:
+
+1. $E(\epsilon_i) = 0$
+2. $Var(\epsilon_i)=\sigma^2$
+3. $\epsilon_i \sim N(0,\sigma^2)$
+4. $\epsilon_i$ independent of $\epsilon_k$ for all $i \neq k$
+
+Residuals vs Fitted Plot: we can see that assumption 1 is satisfied: Since the residuals are approximately centered at 0, we can safely assumed that their expected value is also 0. 
+
+Normal Q-Q Plot:  The normal Q-Q plot looks okay, maybe with a bit of deviation on the right tail. Overall, we would say that this plot indicates that assumption 3 has been satisfied decently.
+
+Scale-Location Plot: We are looking to see if there is any trend, and there does appear that there is a positive trend. So we conclude that the errors are not homoscedastic, violating one of our assumptions. 
+Residuals vs Leverage: There are no points of extreme leverage to note. We would be looking for points in the top right or bottom right corners. 
+
+ii. 
+By taking the log of the response variable (salary), we have improved the Q-Q plot a bit, but dissapointingly have not improved the scale-location plot, which was the main issue. 
+```{r}
+Salaries$log_salary <- log(Salaries$salary)
+model2 <- lm(log_salary ~ ., data = Salaries[,-6])
+autoplot(model1, smooth.colour = NA)
+autoplot(model2, smooth.colour = NA)
+```
+
+
+### Part D
+Here we implement a model with an interaction term between sex and yrs.since.phd
+i.
+```{r}
+model3 <- lm(log_salary ~ . + sex*yrs.since.phd, data = Salaries[,-6])
+```
+
+ii.
+As we can see, Bernie's hypothesis is not correct. Adding an interaction between sex and yrs.since.phd does not improve the significance of the correlation between log_salary and sex.
+```{r}
+summary(model2)
+summary(model3)
+```
+
+
+### Part E
+i. Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
+```{r}
+require(dplyr)
+set.seed(4268)
+
+# boot-strap from Salaries dataset
+N = 1000
+estimator = rep(NA, N)
+for (i in 1:N) {
+    boot_data_i <- sample_n(Salaries, length(Salaries$salary), replace = TRUE)
+    model_i <- lm(salary ~ ., data = boot_data_i)
+    estimator[i] = summary(model_i)$r.squared
+}
+sd(estimator)
+```
+ii. Here we plot the distribution of $R^2$ values obtained through the bootstrap.
+```{r}
+# library & data
+library(ggplot2)
+ 
+# Basic plot with title
+ggplot(data.frame(r2=estimator), aes(x=r2)) + 
+  geom_histogram(fill='deepskyblue4',alpha=0.8) + 
+  ggtitle("R2 Distribution from Bootstrap on Salaries") +
+  theme_minimal()
+```
+iii.
+```{r}
+sd(estimator)
+quantile_vector <- c(0.025,0.975)
+quantile(estimator,quantile_vector)
+```
+
+The standard error (empirical standard deviation) is $\approx 0.00206$. Furthermore, the 95 percent quantile interval is approximately from 0.978 to 0.986. 
+
+iv.
+This analysis bodes very well for the degree to which our model can predict the data. Even on the low end of the 95 percent quantile interval, our model captures 97.8 percent of the variation in the salary variable, which is quite good. 
+
+
+### Part F
+Below is Bert-Ernie's incorrect code:
+```{r}
+# Make a data frame containing two new observations, corresponding to
+# Bert-Ernie's two possible futures
+bert_ernie <- data.frame(rank = c("Prof", "Prof"),
+                         discipline = c("A", "B"), # Theoretical, applied
+                         yrs.since.phd = c(20, 20),
+                         yrs.service = c(20, 20),
+                         sex = c("Male", "Male"))
+# Use the full model to predict his salary
+preds <- predict(object = model1,
+                 newdata = bert_ernie,
+                 interval = 'prediction',
+                 level = 0.9) # Not 0.95 since we don't care about upper limit
+# Check predictions
+preds
+# Check if lower limit for salary in a theoretical field is large enough
+preds[1, 2] > 75000
+```
+
+i.
+
+ii. Analytical expression for the prediction interval: 
+$$
+\Big[ \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}-t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0}, 
+\boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}+t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0} \Big]
+$$
+
+Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes.
+```{r}
+X = model.matrix(model1)
+beta_hat = coef(model1)
+sigma_hat = sigma(model1)
+x0 = c(1,0,1,0,20,20,1)
+tval = qt(c(0.05,0.95),df=390)
+
+PI_l = t(x0)%*%beta_hat + tval[1]*sigma_hat* sqrt(1 + t(x0)%*%solve(t(X)%*%X)%*% x0)
+PI_u = t(x0)%*%beta_hat + tval[2]*sigma_hat* sqrt(1 + t(x0)%*%solve(t(X)%*%X)%*% x0)
+
+PI = c(PI_l,PI_u)
+PI
+```
+
+
+
+Write to statlearn project
+
+
+
+
+## Problem 3
+
+Here we download and clean the data, as provided in the problem statement:
+```{r}
+bigfoot_original <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-13/bigfoot.csv")
+
+library(dplyr)
+
+# Prepare the data:
+bigfoot <- bigfoot_original %>%
+  # Select the relevant covariates:
+  dplyr::select(classification, observed, longitude, latitude, visibility) %>%
+  # Remove observations of class C (these are second- or third hand accounts):
+  dplyr::filter(classification != "Class C") %>%
+  # Turn into 0/1, 1 = Class A, 0 = Class B:
+  dplyr::mutate(class = ifelse(classification == "Class A", 1, 0)) %>%
+  # Create new indicator variables for some words from the description:
+  dplyr::mutate(fur = grepl("fur", observed),
+                howl = grepl("howl", observed),
+                saw = grepl("saw", observed),
+                heard = grepl("heard", observed)) %>%
+  # Remove unnecessary variables:
+  dplyr::select(-c("classification", "observed")) %>%
+  # Remove any rows that contain missing values:
+  tidyr::drop_na()
+```
+Here we separate the data into training and test data, using the same seed as in the problem statement:
+```{r}
+set.seed(2023)
+
+# 70% of the sample size for training set
+training_set_size <- floor(0.7 * nrow(bigfoot))
+
+train_ind <- sample(seq_len(nrow(bigfoot)), size = training_set_size)
+
+train <- bigfoot[train_ind, ]
+test <- bigfoot[-train_ind, ]
+```
+
+### Part A
+
+i.
+Here we fit a QDA model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
+```{r}
+bigfoot_logistic <- glm(class ~ ., data = train, family = binomial)
+
+bigfoot_logistic_test_probs <- predict(bigfoot_logistic, newdata= test, type = "response")
+bigfoot_logistic_test_pred <- bigfoot_logistic_test_probs > .5
+table(bigfoot_logistic_test_pred, test$class)
+```
+
+ii. We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
+
+## Part B
+
+i. The following code implements a QDA model:
+```{r}
+require(MASS)
+bigfoot_qda <- qda(class ~ ., data = train)
+bigfoot_qda_test_probs <- predict(bigfoot_qda, test)
+bigfoot_qda_class <- predict(bigfoot_qda, test)$class
+table(bigfoot_qda_class, test$class)
+
+```
+
+We note that 447 observations in the test set were identified as class "A", of which 389 were correct identifications. 
+
+ii. 
+
+1. True: The main difference between QDA and LDA is that QDA assumes that each class has its own covariance matrix.
+
+2. False: LDA generally leads to low variance, high bias since it is less flexible than QDA. Thus we would prefer it for when there are fewer training observations so that we can reduce the variance of our model. [review logic]
+
+3. False: If the Bayes decision boundary is linear, we would always prefer LDA
+
+4. False: QDA does not have observations with a common mean vector. 
+
+## Part C
+
+i.
+The code below implements KNN classification for k=25. 
+```{r}
+bigfoot_knn_pred <- knn(train=train, test=test, cl=train$class, k = 25, prob = TRUE)
+table(bigfoot_knn_pred, test$class)
+```
+
+ii. We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
+
+## Part D
+
+i. In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
+
+ii. 
+```{r}
+# logistic model confusion table
+logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
+# QDA model confusion table
+qda_confusion <- table(bigfoot_qda_class, test$class)
+# KNN model confusion table
+knn_confusion <- table(bigfoot_knn_pred, test$class)
+
+
+logistic_sensitivity <- logistic_confusion[2,2] / sum(logistic_confusion[,2])
+logistic_specificity <- logistic_confusion[1,1] / sum(logistic_confusion[,1])
+
+qda_sensitivity <- qda_confusion[2,2] / sum(qda_confusion[,2])
+qda_specificity <- qda_confusion[1,1] / sum(qda_confusion[,1])
+
+knn_sensitivity <- knn_confusion[2,2] / sum(knn_confusion[,2])
+knn_specificity <- knn_confusion[1,1] / sum(knn_confusion[,1])
+
+
+logistic_confusion
+logistic_sensitivity
+logistic_specificity
+
+qda_confusion
+qda_sensitivity
+qda_specificity
+
+knn_confusion
+knn_sensitivity
+knn_specificity
+```
+Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
+Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
+For both of these statistics, we prefer them to be as close to $1$ as possible. 
+
+iii.
+```{r}
+bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, plot = TRUE, print.auc = TRUE)
+bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], plot = TRUE, print.auc = TRUE)
+
+probKNN <- ifelse(bigfoot_knn_pred == 0,
+                  1 - attributes(bigfoot_knn_pred)$prob,
+                  attributes(bigfoot_knn_pred)$prob)
+bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
+```
+
+
+## Problem 4
+
+## Part A
+
+Not finished with the markup, needs to be made "prettier". Also, may need to show that the matrix is invertible in order to use Shermans formula... Math is correct though
+
+We want to calculate the error of our model when the $i^{th}$ response is removed, i.e.
+$$e_{(-i)} = y_i - \hat{y}_{(-i)} = y_i - x_i^T \hat\beta_{(-i)}$$
+$$\hat\beta = (X^TX)^{-1}X^TY \qquad \text{and}$$
+$$ \qquad \hat\beta_{(-i)} = (X_{(-i)}^TX_{(-i)})^{-1}X_{(-i)}^Ty_{(-i)} \quad \text{(a)}$$
+Since the estimator of beta without the $i^{th}$ response is unknown, we need to express it in terms of known variables. First, using the Sherman-Morris formula, we find that:
+\begin{align}
+(X_{(-i)}^TX_{(-i)})^{-1} &= (X^TX - x_i x_i^T)^{-1} \\
+&= (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-x_i^T(X^TX)^{-1}x_i} \\
+&= (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-h_i} \quad \text{(b)} \\
+\end{align}
+
+It is also known that
+$$X_{(-i)}^Ty_{(-i)} = X^TY-x_iy_i \quad \text{(c)}$$
+With this we can substitute (b) and (c) into (a), giving:
+\begin{align}
+ \hat\beta_{(-i)} &= \left[ (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-h_i} \right] (X^TY-x_iy_i)\\
+&= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i(1-h_i)-x_i^T\hat\beta+h_iy_i)\\
+&= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-x_i^T\hat\beta) \\
+&= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-\hat{y}_i)
+\end{align}
+
+Which, when substituted into the error equation gives:
+\begin{align}
+y_i - \hat{y}_{(-i)} &= y_i - x_i^T \hat\beta_{(-i)} \\
+&= y_i - x_i^T \left( \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-\hat{y}_i) \right) \\
+&= y_i -\hat{y}_i + \frac{h_i}{1-h_i}(y_i-\hat{y}_i) \\
+&= \frac{y_i-\hat{y}_i}{1-h_i}
+\end{align}
+Finally, the LOOCV is calculated by the RSS of the error, so:
+$$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
+
+
+## Part B
+
+i. False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
+
+ii. False: Polynomial regression is explicitly one of the conditions for which the formula in part A is valid (see p.202 ISLR)
+
+iii. True: The formula from part A is valid for linear regression (least squares) and transforming the response variable does compromise this.
+
+iv. False: In the validation approach, we train on the training set and then test on the test set, which is equivalent to the first step of the 2-fold CV approach. In the 2-fold CV approach we train on the training set and then test on the test set, but then we switch these sets and train on what was previously the test set and test on what was previously the training set.
+
+
+
+
+
+
+
+
+
+
+
+
