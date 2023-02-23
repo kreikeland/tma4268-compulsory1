@@ -1,12 +1,12 @@
 ---
 title: "Compulsory Exercise 1"
-authors: Chester Henry Charlton, Kasper, Tinus
-date: "2023-02-08"
+author: "Chester Henry Charlton, Kasper Eikeland, Tinus Garshol"
+date: '2023-02-23'
 output:
   pdf_document: default
   html_document: default
 ---
-## Setup
+
 ```{r, include=FALSE}
 require("knitr") 
 require("ggplot2") 
@@ -19,52 +19,46 @@ require("plotROC")
 require("ggmosaic")
 install.packages("readr")
 ```
-TO DO:
-2.a.ii
-2.b
-2.f.ii
-4.a (finish)
-
 
 ## Problem 1
 
 ### Part A
-We calculate the expected value of $\tilde{\beta}$ as follows:
+We calculate the expected value of $\tilde{\boldsymbol \beta}$ as follows:
 \begin{align}
-E(\tilde{\beta}) &= E[(X^TX+\lambda I)^{-1} X^T Y] \\
-                 &= (X^TX+\lambda I)^{-1} X^T E(Y) \\
-               Y &= X\beta + e \\
-             E(Y)&= E(X\beta + e) \\
-                 &= X\beta \\
-E(\tilde{\beta}) &= (X^TX+\lambda I)^{-1} X^T X \beta
+\text{E}(\tilde{\boldsymbol \beta}) &= \text{E}[(\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{Y}] \\
+&= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \text{E}(\mathbf{Y}) \\
+               \mathbf{Y} &= \mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon} \\
+             \text{E}(\mathbf{Y})&= \text{E}(\mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon}) \\
+                 &= \mathbf{X}{\boldsymbol \beta} \\
+\text{E}(\tilde{\boldsymbol \beta}) &= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{X} {\boldsymbol \beta}
 \end{align}
 Furthermore, we calculate the variance-covariance of $\tilde{\beta}$ as follows:
 We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\boldsymbol \varepsilon}) = \text{Var}({\boldsymbol \varepsilon}) = \sigma^2$. Defining ${\bf W} = (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1}$ we compute the variance-covariance matrix $\text{Var}(\tilde{\boldsymbol \beta})$ as
 
-\begin{aligned}
+\begin{align}
 \text{Var}(\tilde{\boldsymbol \beta}) 
 &= \text{Var}({\bf W}\mathbf{X}^\top {\bf Y} ) \\
 &= {\bf W}\mathbf{X}^\top \text{Var}({\bf Y})({\bf W}\mathbf{X}^\top)^\top \\
 &= \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W}
-\end{aligned}
+\end{align}
 
 since ${\bf W}$ is symmetric.
 
 ### Part B
 Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have that 
-\begin{aligned}
+\begin{align}
 \text{E}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{E}(\tilde{\boldsymbol \beta})  \\
 &= {\bf x_0}^\top (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top\mathbf{X} {\boldsymbol \beta}  \\
-\end{aligned}
+\end{align}
 
 and
 
-\begin{aligned}
-\text{Var}(\tilde{f}({\bf x_0}) 
+\begin{align}
+\text{Var}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{Var}(\tilde{\boldsymbol \beta}) {\bf x_0} \\
 &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0}
-\end{aligned}
+\end{align}
 
 ### Part C
 
@@ -77,12 +71,11 @@ Irreducible error is the "noise" in our data that results from the fact that our
 ### Part D
 We can calculate the mean squared error of a particular observation by decomposing it as the sum of the variance, squared bias, and standard deviation at a particular point. We already have expressions for the variance from part b and the standard deviation is known. Therefore, we need only derive the expression for the squared bias at a particular point, and then substitute.
 \begin{align}
-Bias^2 &= E(y_0 - \tilde{f}(x_0))\\
-&= x_0^T \beta - x_0^T E(\beta)\\
-MSE(Y-\hat{Y}) &= Var(\hat{Y}) + Bias^2(\hat{Y}) + Var(\epsilon) \\
-               &= Var(\vec{x}_0^T \tilde{\beta}) + Bias^2(\vec{x}_0^T \tilde{\beta}) + Var(\epsilon)\\
-               &= W \sigma^2 W^T + Bias^2(\vec{x}_0^T \tilde{\beta}) + \sigma^2 \\
-        
+\text{Bias}^2 &= \text{E}(\mathbf{y}_0 - \tilde{f}(\mathbf{x}_0))\\
+&= \mathbf{x}_0^\top {\boldsymbol \beta} - \mathbf{x}_0^\top \text{E}({\boldsymbol \beta})\\
+\text{MSE}(\mathbf{Y}-\hat{\mathbf{Y}}) &= \text{Var}(\hat{\mathbf{Y}}) + \text{Bias}^2(\hat{\mathbf{Y}}) + \mathbf{Var}({\boldsymbol \varepsilon}) \\
+               &= \text{Var}(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Var}({\boldsymbol \varepsilon})\\
+               &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0} + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \sigma^2 \\
 \end{align}
 
 
@@ -142,6 +135,7 @@ ggplot(dfVar, aes(x = lambdas, y = var)) +
   xlab(expression(lambda)) +
   ylab("variance")
 ```
+
 ### Part G
 ```{r}
 exp_mse <- VAR + BIAS + sigma**2
@@ -169,7 +163,8 @@ summary(model1)
 
 ### Part A
 
-i. The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
+#### i. 
+The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
 
 ii. Analysis of variance
 ```{r}
@@ -196,7 +191,8 @@ library("ggfortify")
 autoplot(model1,smooth.color="NA")
 ```
 
-i. For robust linear regression, the following assumptions must be satisfied:
+#### i. 
+For robust linear regression, the following assumptions must be satisfied:
 
 1. $E(\epsilon_i) = 0$
 2. $Var(\epsilon_i)=\sigma^2$
@@ -210,7 +206,7 @@ Normal Q-Q Plot:  The normal Q-Q plot looks okay, maybe with a bit of deviation 
 Scale-Location Plot: We are looking to see if there is any trend, and there does appear that there is a positive trend. So we conclude that the errors are not homoscedastic, violating one of our assumptions. 
 Residuals vs Leverage: There are no points of extreme leverage to note. We would be looking for points in the top right or bottom right corners. 
 
-ii. 
+#### ii. 
 By taking the log of the response variable (salary), we have improved the Q-Q plot a bit, but dissapointingly have not improved the scale-location plot, which was the main issue. 
 ```{r}
 Salaries$log_salary <- log(Salaries$salary)
@@ -222,12 +218,12 @@ autoplot(model2, smooth.colour = NA)
 
 ### Part D
 Here we implement a model with an interaction term between sex and yrs.since.phd
-i.
+#### i.
 ```{r}
 model3 <- lm(log_salary ~ . + sex*yrs.since.phd, data = Salaries[,-6])
 ```
 
-ii.
+#### ii.
 As we can see, Bernie's hypothesis is not correct. Adding an interaction between sex and yrs.since.phd does not improve the significance of the correlation between log_salary and sex.
 ```{r}
 summary(model2)
@@ -236,7 +232,9 @@ summary(model3)
 
 
 ### Part E
-i. Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
+
+#### i. 
+Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
 ```{r}
 require(dplyr)
 set.seed(4268)
@@ -251,7 +249,8 @@ for (i in 1:N) {
 }
 sd(estimator)
 ```
-ii. Here we plot the distribution of $R^2$ values obtained through the bootstrap.
+#### ii. 
+Here we plot the distribution of $R^2$ values obtained through the bootstrap.
 ```{r}
 # library & data
 library(ggplot2)
@@ -262,7 +261,8 @@ ggplot(data.frame(r2=estimator), aes(x=r2)) +
   ggtitle("R2 Distribution from Bootstrap on Salaries") +
   theme_minimal()
 ```
-iii.
+
+#### iii.
 ```{r}
 sd(estimator)
 quantile_vector <- c(0.025,0.975)
@@ -271,14 +271,15 @@ quantile(estimator,quantile_vector)
 
 The standard error (empirical standard deviation) is $\approx 0.00206$. Furthermore, the 95 percent quantile interval is approximately from 0.978 to 0.986. 
 
-iv.
+#### iv.
 This analysis bodes very well for the degree to which our model can predict the data. Even on the low end of the 95 percent quantile interval, our model captures 97.8 percent of the variation in the salary variable, which is quite good. 
 
 
 ### Part F
 
+#### i. 
 
-i. Below is Bert-Ernie's corrected code. His mistakes were that he should have used a prediction interval instead of a confidence interval. He also should have used a 90% interval instead of a 0.975% to ensure a 95% certainty for the lower limit.
+Below is Bert-Ernie's code, corrected. We have changed the interval to a prediction interval since we are only predicted one value. We have changed the confidence level to 0.9 in order to achieve a 95% one-sided confidence interval. Note that with the corrected code, Bert-Ernie can still be confident about his salary regardless of which option he chooses. 
 ```{r}
 # Make a data frame containing two new observations, corresponding to
 # Bert-Ernie's two possible futures
@@ -298,13 +299,14 @@ preds
 preds[1, 2] > 75000
 ```
 
-ii. Analytical expression for the prediction interval: 
+#### ii. 
+Analytical expression for the two sided, 90% prediction interval: 
 $$
 \Big[ \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}-t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0}, 
 \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}+t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0} \Big]
 $$
 
-Now we can implement this interval in R analytically, noting that a 90% prediction interval gives a 95% prediction for our lower bound.
+Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes. The result is identical to the one we received using r-functions.
 ```{r}
 X = model.matrix(model1)
 beta_hat = coef(model1)
@@ -361,33 +363,50 @@ test <- bigfoot[-train_ind, ]
 
 ### Part A
 
-i.
-Here we fit a QDA model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
+#### i.
+Here we fit a logistic model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
 ```{r}
 bigfoot_logistic <- glm(class ~ ., data = train, family = binomial)
 
 bigfoot_logistic_test_probs <- predict(bigfoot_logistic, newdata= test, type = "response")
-bigfoot_logistic_test_pred <- bigfoot_logistic_test_probs > .5
-table(bigfoot_logistic_test_pred, test$class)
+bigfoot_logistic_pred <- rep(0, length(test$class))
+bigfoot_logistic_pred[bigfoot_logistic_test_probs > .5] <- 1
+
+logistic_confusion <- table(bigfoot_logistic_pred, test$class)
+
+rownames(logistic_confusion) <- c('pred B','pred A')
+
+colnames(logistic_confusion) <- c('true B','true A')
+
+logistic_confusion
 ```
 
-ii. We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
+#### ii. 
+We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
 
-## Part B
+### Part B
 
-i. The following code implements a QDA model:
+#### i. 
+The following code implements a QDA model:
 ```{r}
 require(MASS)
 bigfoot_qda <- qda(class ~ ., data = train)
 bigfoot_qda_test_probs <- predict(bigfoot_qda, test)
-bigfoot_qda_class <- predict(bigfoot_qda, test)$class
-table(bigfoot_qda_class, test$class)
+bigfoot_qda_pred <- predict(bigfoot_qda, test)$class
+
+qda_confusion <- table(bigfoot_qda_pred, test$class)
+
+rownames(qda_confusion) <- c('pred B','pred A')
+
+colnames(qda_confusion) <- c('true B','true A')
+
+qda_confusion
 
 ```
 
-We note that 447 observations in the test set were identified as class "A", of which 389 were correct identifications. 
+We note that 626 observations in the test set were identified as class "A", of which 389 were correct identifications. 
 
-ii. 
+#### ii. 
 
 1. True: The main difference between QDA and LDA is that QDA assumes that each class has its own covariance matrix.
 
@@ -397,29 +416,41 @@ ii.
 
 4. False: QDA does not have observations with a common mean vector. 
 
-## Part C
+### Part C
 
-i.
+#### i.
 The code below implements KNN classification for k=25. 
 ```{r}
 bigfoot_knn_pred <- knn(train=train, test=test, cl=train$class, k = 25, prob = TRUE)
-table(bigfoot_knn_pred, test$class)
+knn_confusion <- table(bigfoot_knn_pred, test$class)
+
+rownames(knn_confusion) <- c('pred B','pred A')
+
+colnames(knn_confusion) <- c('true B','true A')
+
+knn_confusion
 ```
 
-ii. We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
+#### ii. 
+We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
 
-## Part D
+### Part D
 
-i. In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
+#### i. 
+In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
 
-ii. 
+#### ii. 
+Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
+Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
+For both of these statistics, we prefer them to be as close to $1$ as possible. 
+
 ```{r}
-# logistic model confusion table
-logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
-# QDA model confusion table
-qda_confusion <- table(bigfoot_qda_class, test$class)
-# KNN model confusion table
-knn_confusion <- table(bigfoot_knn_pred, test$class)
+# # logistic model confusion table
+# logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
+# # QDA model confusion table
+# qda_confusion <- table(bigfoot_qda_class, test$class)
+# # KNN model confusion table
+# knn_confusion <- table(bigfoot_knn_pred, test$class)
 
 
 logistic_sensitivity <- logistic_confusion[2,2] / sum(logistic_confusion[,2])
@@ -444,11 +475,9 @@ knn_confusion
 knn_sensitivity
 knn_specificity
 ```
-Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
-Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
-For both of these statistics, we prefer them to be as close to $1$ as possible. 
 
-iii.
+
+#### iii.
 ```{r}
 bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, plot = TRUE, print.auc = TRUE)
 bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], plot = TRUE, print.auc = TRUE)
@@ -462,7 +491,7 @@ bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
 
 ## Problem 4
 
-## Part A
+### Part A
 
 Not finished with the markup, needs to be made "prettier". Also, may need to show that the matrix is invertible in order to use Shermans formula... Math is correct though
 
@@ -498,15 +527,19 @@ Finally, the LOOCV is calculated by the RSS of the error, so:
 $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
 
 
-## Part B
+### Part B
 
-i. False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
+#### i. 
+False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
 
-ii. False: Polynomial regression is explicitly one of the conditions for which the formula in part A is valid (see p.202 ISLR)
+#### ii. 
+False: Polynomial regression is explicitly one of the conditions for which the formula in part A is valid (see p.202 ISLR)
 
-iii. True: The formula from part A is valid for linear regression (least squares) and transforming the response variable does compromise this.
+#### iii.
+True: The formula from part A is valid for linear regression (least squares) and transforming the response variable does compromise this.
 
-iv. False: In the validation approach, we train on the training set and then test on the test set, which is equivalent to the first step of the 2-fold CV approach. In the 2-fold CV approach we train on the training set and then test on the test set, but then we switch these sets and train on what was previously the test set and test on what was previously the training set.
+#### iv. 
+False: In the validation approach, we train on the training set and then test on the test set, which is equivalent to the first step of the 2-fold CV approach. In the 2-fold CV approach we train on the training set and then test on the test set, but then we switch these sets and train on what was previously the test set and test on what was previously the training set.
 
 
 
