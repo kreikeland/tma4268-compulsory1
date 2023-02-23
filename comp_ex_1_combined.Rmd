@@ -26,14 +26,14 @@ TO DO:
 ## Problem 1
 
 ### Part A
-We calculate the expected value of $\tilde{\beta}$ as follows:
+We calculate the expected value of $\tilde{\boldsymbol \beta}$ as follows:
 \begin{align}
-E(\tilde{\beta}) &= E[(X^TX+\lambda I)^{-1} X^T Y] \\
-                 &= (X^TX+\lambda I)^{-1} X^T E(Y) \\
-               Y &= X\beta + e \\
-             E(Y)&= E(X\beta + e) \\
-                 &= X\beta \\
-E(\tilde{\beta}) &= (X^TX+\lambda I)^{-1} X^T X \beta
+\text{E}(\tilde{\boldsymbol \beta}) &= \text{E}[(\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{Y}] \\
+                 &= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \text{E}(\mathbf{Y}) \\
+               \mathbf{Y} &= \mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon} \\
+             \text{E}(\mathbf{Y})&= \text{E}(\mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon}) \\
+                 &= \mathbf{X}{\boldsymbol \beta} \\
+\text{E}(\tilde{\boldsymbol \beta}) &= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{X} {\boldsymbol \beta}
 \end{align}
 Furthermore, we calculate the variance-covariance of $\tilde{\beta}$ as follows:
 We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\boldsymbol \varepsilon}) = \text{Var}({\boldsymbol \varepsilon}) = \sigma^2$. Defining ${\bf W} = (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1}$ we compute the variance-covariance matrix $\text{Var}(\tilde{\boldsymbol \beta})$ as
@@ -58,7 +58,7 @@ Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have t
 and
 
 \begin{aligned}
-\text{Var}(\tilde{f}({\bf x_0}) 
+\text{Var}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{Var}(\tilde{\boldsymbol \beta}) {\bf x_0} \\
 &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0}
 \end{aligned}
@@ -74,11 +74,11 @@ Irreducible error is the "noise" in our data that results from the fact that our
 ### Part D
 We can calculate the mean squared error of a particular observation by decomposing it as the sum of the variance, squared bias, and standard deviation at a particular point. We already have expressions for the variance from part b and the standard deviation is known. Therefore, we need only derive the expression for the squared bias at a particular point, and then substitute.
 \begin{align}
-Bias^2 &= E(y_0 - \tilde{f}(x_0))\\
-&= x_0^T \beta - x_0^T E(\beta)\\
-MSE(Y-\hat{Y}) &= Var(\hat{Y}) + Bias^2(\hat{Y}) + Var(\epsilon) \\
-               &= Var(\vec{x}_0^T \tilde{\beta}) + Bias^2(\vec{x}_0^T \tilde{\beta}) + Var(\epsilon)\\
-               &= W \sigma^2 W^T + Bias^2(\vec{x}_0^T \tilde{\beta}) + \sigma^2 \\
+\text{Bias}^2 &= \text{E}(\mathbf{y}_0 - \tilde{f}(\mathbf{x}_0))\\
+&= \mathbf{x}_0^\top {\boldsymbol \beta} - \mathbf{x}_0^\top \text{E}({\boldsymbol \beta})\\
+\text{MSE}(\mathbf{Y}-\hat{\mathbf{Y}}) &= \text{Var}(\hat{\mathbf{Y}}) + \text{Bias}^2(\hat{\mathbf{Y}}) + \mathbf{Var}({\boldsymbol \varepsilon}) \\
+               &= \text{Var}(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Var}({\boldsymbol \varepsilon})\\
+               &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0} + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \sigma^2 \\
         
 \end{align}
 
