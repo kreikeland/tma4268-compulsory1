@@ -7,17 +7,23 @@ output:
   html_document: default
 ---
 
-```{r, include=FALSE}
-require("knitr") 
-require("ggplot2") 
-require("dplyr")
-require("tidyr") 
-require("carData")
-require("class")
-require("pROC") 
-require("plotROC") 
-require("ggmosaic")
-install.packages("readr")
+```{r, message=FALSE}
+library("knitr") 
+library("ggplot2") 
+library("dplyr")
+library("tidyr") 
+library("carData")
+library("class")
+library("pROC") 
+library("plotROC") 
+library("ggmosaic")
+library("readr")
+library("ggfortify")
+library("MASS")
+knitr::opts_chunk$set(echo=TRUE, eval=TRUE, message=FALSE, warning = FALSE, 
+                      strip.white = TRUE, prompt = FALSE, cache = TRUE, 
+                      size = "scriptsize", fig.width = 4, fig.height = 3,
+                      fig.align = "center")
 ```
 
 ## Problem 1
@@ -34,16 +40,13 @@ We calculate the expected value of $\tilde{\boldsymbol \beta}$ as follows:
 \end{align*}
 Furthermore, we calculate the variance-covariance of $\tilde{\beta}$ as follows:
 We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\boldsymbol \varepsilon}) = \text{Var}({\boldsymbol \varepsilon}) = \sigma^2$. Defining ${\bf W} = (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1}$ we compute the variance-covariance matrix $\text{Var}(\tilde{\boldsymbol \beta})$ as
-
 \begin{align*}
 \text{Var}(\tilde{\boldsymbol \beta}) 
 &= \text{Var}({\bf W}\mathbf{X}^\top {\bf Y} ) \\
 &= {\bf W}\mathbf{X}^\top \text{Var}({\bf Y})({\bf W}\mathbf{X}^\top)^\top \\
 &= \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W}
 \end{align*}
-
 since ${\bf W}$ is symmetric.
-
 ### Part B
 Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have that 
 \begin{align*}
@@ -51,9 +54,7 @@ Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have t
 &= {\bf x_0}^\top \text{E}(\tilde{\boldsymbol \beta})  \\
 &= {\bf x_0}^\top (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top\mathbf{X} {\boldsymbol \beta}  \\
 \end{align*}
-
 and
-
 \begin{align*}
 \text{Var}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{Var}(\tilde{\boldsymbol \beta}) {\bf x_0} \\
@@ -71,37 +72,25 @@ Irreducible error is the "noise" in our data that results from the fact that our
 ### Part D
 We can calculate the mean squared error of a particular observation by decomposing it as the sum of the variance, squared bias, and standard deviation at a particular point. We already have expressions for the variance from part b and the standard deviation is known. Therefore, we need only derive the expression for the squared bias at a particular point, and then substitute.
 \begin{align*}
-\text{Bias}^2 &= \text{E}(\mathbf{y}_0 - \tilde{f}(\mathbf{x}_0))\\
+\text{Bias}^2 &= \text{E}(y_0 - \tilde{f}(\mathbf{x}_0))\\
 &= \mathbf{x}_0^\top {\boldsymbol \beta} - \mathbf{x}_0^\top \text{E}({\boldsymbol \beta})\\
 \text{MSE}(\mathbf{Y}-\hat{\mathbf{Y}}) &= \text{Var}(\hat{\mathbf{Y}}) + \text{Bias}^2(\hat{\mathbf{Y}}) + \mathbf{Var}({\boldsymbol \varepsilon}) \\
                &= \text{Var}(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Var}({\boldsymbol \varepsilon})\\
                &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0} + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \sigma^2 \\
 \end{align*}
 
-
-
-
-```{r, include=FALSE}
+```{r}
 id <- "1X_8OKcoYbng1XvYFDirxjEWr7LtpNr1m" # google file ID
 values <- dget(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
-
 X <- values$X
-dim(X)
-
 x0 <- values$x0
-dim(x0)
-
 beta <- values$beta
-dim(beta)
-
 sigma <- values$sigma
-sigma
 ```
 
 ### Part E
 
-```{r}
-library(ggplot2)
+```{r, fig.width=4, fig.height=3}
 bias <- function(lambda, X, x0, beta) {
   p <- ncol(X)
   value <- (t(x0) %*% beta - t(x0) %*% (solve(t(X)%*%X + lambda * diag(p)) %*% (t(X) %*% X) %*% beta))**2
@@ -118,7 +107,7 @@ ggplot(dfBias, aes(x = lambdas, y = bias)) +
 ```
 
 ### Part F
-```{r}
+```{r, fig.width=4, fig.height=3}
 variance <- function(lambda, X, x0, sigma) {
   p <- ncol(X)
   inv <- solve(t(X) %*% X + lambda * diag(p))
@@ -137,7 +126,7 @@ ggplot(dfVar, aes(x = lambdas, y = var)) +
 ```
 
 ### Part G
-```{r}
+```{r, fig.width=5, fig.height=3}
 exp_mse <- VAR + BIAS + sigma**2
 lambdas[which.min(exp_mse)]
 
@@ -152,10 +141,12 @@ ggplot(dfVarBiasMSE, aes(x=lambdas)) +
 
 
 ## Problem 2
-```{r}
+```{r, message=FALSE}
 library(carData)
-GGally::ggpairs(Salaries)
+```
 
+
+```{r}
 # Fit full model
 model1 <- lm(salary ~ ., data = Salaries)
 summary(model1)
@@ -166,7 +157,8 @@ summary(model1)
 #### i. 
 The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
 
-ii. Analysis of variance
+#### ii. 
+Analysis of variance
 ```{r}
 anova(model1)[1,]
 ```
@@ -174,7 +166,7 @@ Through an analysis of variance it is clear that the p-value for the F-statistic
 
 ### Part B
 
-```{r}
+```{r, fig.height=3, fig.width=7}
 par(mfrow=c(1,3))   # set the plotting area into a 1*3 array
 boxplot(salary~sex,data=Salaries,ylim=c(75000,175000))
 boxplot(salary~rank,data=Salaries,ylim=c(75000,175000))
@@ -184,12 +176,6 @@ The linear regression model considers correlation between parameters based on wh
 
 
 ### Part C
-
-```{r}
-library("ggplot2")
-library("ggfortify")
-autoplot(model1,smooth.color="NA")
-```
 
 #### i. 
 For robust linear regression, the following assumptions must be satisfied:
@@ -208,7 +194,7 @@ Residuals vs Leverage: There are no points of extreme leverage to note. We would
 
 #### ii. 
 By taking the log of the response variable (salary), we have improved the Q-Q plot a bit, but dissapointingly have not improved the scale-location plot, which was the main issue. 
-```{r}
+```{r, out.width = '60%', fig.height=6, fig.width=6}
 Salaries$log_salary <- log(Salaries$salary)
 model2 <- lm(log_salary ~ ., data = Salaries[,-6])
 autoplot(model1, smooth.colour = NA)
@@ -236,7 +222,6 @@ summary(model3)
 #### i. 
 Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
 ```{r}
-require(dplyr)
 set.seed(4268)
 
 # boot-strap from Salaries dataset
@@ -251,11 +236,7 @@ sd(estimator)
 ```
 #### ii. 
 Here we plot the distribution of $R^2$ values obtained through the bootstrap.
-```{r}
-# library & data
-library(ggplot2)
- 
-# Basic plot with title
+```{r, message=FALSE, fig.width=5, fig.height=3}
 ggplot(data.frame(r2=estimator), aes(x=r2)) + 
   geom_histogram(fill='deepskyblue4',alpha=0.8) + 
   ggtitle("R2 Distribution from Bootstrap on Salaries") +
@@ -306,7 +287,7 @@ $$
 \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}+t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0} \Big]
 $$
 
-Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes. The result is identical to the one we received using r-functions.
+Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes. The result is identical to the one we received using R-functions.
 ```{r}
 X = model.matrix(model1)
 beta_hat = coef(model1)
@@ -325,10 +306,8 @@ We notice the analytical results yields the same PI.
 ## Problem 3
 
 Here we download and clean the data, as provided in the problem statement:
-```{r}
+```{r, message=FALSE}
 bigfoot_original <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-09-13/bigfoot.csv")
-
-library(dplyr)
 
 # Prepare the data:
 bigfoot <- bigfoot_original %>%
@@ -364,22 +343,16 @@ test <- bigfoot[-train_ind, ]
 ### Part A
 
 #### i.
-Here we fit a logistic model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
+Here we fit a logistic model.  
 ```{r}
 bigfoot_logistic <- glm(class ~ ., data = train, family = binomial)
 
 bigfoot_logistic_test_probs <- predict(bigfoot_logistic, newdata= test, type = "response")
-bigfoot_logistic_pred <- rep(0, length(test$class))
-bigfoot_logistic_pred[bigfoot_logistic_test_probs > .5] <- 1
+bigfoot_logistic_pred <- rep("0", length(test$class))
+bigfoot_logistic_pred[bigfoot_logistic_test_probs > .5] <- "1"
 
-logistic_confusion <- table(bigfoot_logistic_pred, test$class)
-
-rownames(logistic_confusion) <- c('pred B','pred A')
-
-colnames(logistic_confusion) <- c('true B','true A')
-
-logistic_confusion
 ```
+Note that `r sum(bigfoot_logistic_pred == "1")` observations were classified in the "A" category. `r sum(bigfoot_logistic_pred == "1" & test$class == "1")` of these were correct identifications.
 
 #### ii. 
 We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
@@ -389,22 +362,12 @@ We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
 #### i. 
 The following code implements a QDA model:
 ```{r}
-require(MASS)
 bigfoot_qda <- qda(class ~ ., data = train)
 bigfoot_qda_test_probs <- predict(bigfoot_qda, test)
 bigfoot_qda_pred <- predict(bigfoot_qda, test)$class
-
-qda_confusion <- table(bigfoot_qda_pred, test$class)
-
-rownames(qda_confusion) <- c('pred B','pred A')
-
-colnames(qda_confusion) <- c('true B','true A')
-
-qda_confusion
-
 ```
 
-We note that 626 observations in the test set were identified as class "A", of which 389 were correct identifications. 
+We note that `r sum(bigfoot_qda_pred == "1")` observations in the test set were identified as class "A", of which `r sum(bigfoot_qda_pred == "1" & test$class == "1")` were correct identifications. 
 
 #### ii. 
 
@@ -422,13 +385,6 @@ We note that 626 observations in the test set were identified as class "A", of w
 The code below implements KNN classification for k=25. 
 ```{r}
 bigfoot_knn_pred <- knn(train=train, test=test, cl=train$class, k = 25, prob = TRUE)
-knn_confusion <- table(bigfoot_knn_pred, test$class)
-
-rownames(knn_confusion) <- c('pred B','pred A')
-
-colnames(knn_confusion) <- c('true B','true A')
-
-knn_confusion
 ```
 
 #### ii. 
@@ -445,42 +401,43 @@ Specificity refers to the probability (based on the test set) that an observatio
 For both of these statistics, we prefer them to be as close to $1$ as possible. 
 
 ```{r}
-# # logistic model confusion table
-# logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
-# # QDA model confusion table
-# qda_confusion <- table(bigfoot_qda_class, test$class)
-# # KNN model confusion table
-# knn_confusion <- table(bigfoot_knn_pred, test$class)
-
-
+logistic_confusion <- table(bigfoot_logistic_pred, test$class)
+rownames(logistic_confusion) <- c('pred B','pred A')
+colnames(logistic_confusion) <- c('true B','true A')
 logistic_sensitivity <- logistic_confusion[2,2] / sum(logistic_confusion[,2])
 logistic_specificity <- logistic_confusion[1,1] / sum(logistic_confusion[,1])
+logistic_vals = c(logistic_sensitivity, logistic_specificity)
 
+qda_confusion <- table(bigfoot_qda_pred, test$class)
+rownames(qda_confusion) <- c('pred B','pred A')
+colnames(qda_confusion) <- c('true B','true A')
 qda_sensitivity <- qda_confusion[2,2] / sum(qda_confusion[,2])
 qda_specificity <- qda_confusion[1,1] / sum(qda_confusion[,1])
+qda_vals = c(qda_sensitivity, qda_specificity)
 
+knn_confusion <- table(bigfoot_knn_pred, test$class)
+rownames(knn_confusion) <- c('pred B','pred A')
+colnames(knn_confusion) <- c('true B','true A')
 knn_sensitivity <- knn_confusion[2,2] / sum(knn_confusion[,2])
 knn_specificity <- knn_confusion[1,1] / sum(knn_confusion[,1])
+knn_vals = c(knn_sensitivity, knn_specificity)
 
+names = c("Sensitivity", "Specificity")
+df_ss = data.frame(names, logistic = logistic_vals, QDA = qda_vals, KNN = knn_vals)
 
 logistic_confusion
-logistic_sensitivity
-logistic_specificity
-
 qda_confusion
-qda_sensitivity
-qda_specificity
-
 knn_confusion
-knn_sensitivity
-knn_specificity
+df_ss
 ```
 
 
 #### iii.
-```{r}
-bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, plot = TRUE, print.auc = TRUE)
-bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], plot = TRUE, print.auc = TRUE)
+```{r, message=FALSE, fig.height=3,fig.width=4}
+bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, 
+                            plot = TRUE, print.auc = TRUE)
+bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], 
+                       plot = TRUE, print.auc = TRUE)
 
 probKNN <- ifelse(bigfoot_knn_pred == 0,
                   1 - attributes(bigfoot_knn_pred)$prob,
