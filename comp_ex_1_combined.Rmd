@@ -17,6 +17,7 @@ require("class")
 require("pROC") 
 require("plotROC") 
 require("ggmosaic")
+install.packages("readr")
 ```
 
 ## Problem 1
@@ -158,8 +159,6 @@ GGally::ggpairs(Salaries)
 # Fit full model
 model1 <- lm(salary ~ ., data = Salaries)
 summary(model1)
-
-
 ```
 
 ### Part A
@@ -167,24 +166,29 @@ summary(model1)
 #### i. 
 The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
 
-#### ii. 
+ii. Analysis of variance
 ```{r}
-# var.test()
+anova(model1)[1,]
 ```
+Through an analysis of variance it is clear that the p-value for the F-statistic shows a significant variance between salary and rank, showing there is a strong correlation between the two.
 
 ### Part B
 
 ```{r}
-sex_model <- lm(salary ~ sex, data = Salaries)
-summary(sex_model)
+par(mfrow=c(1,3))   # set the plotting area into a 1*3 array
+boxplot(salary~sex,data=Salaries,ylim=c(75000,175000))
+boxplot(salary~rank,data=Salaries,ylim=c(75000,175000))
+boxplot(salary~discipline,data=Salaries,ylim=c(75000,175000))
 ```
+The linear regression model considers correlation between parameters based on which covariates are included. When looking at sex_model, there is a noticeable difference between the salaries for males and females, suggesting that gender makes a sufficient impact on salary. However, when compared to other covariates in model1, such as rank and discipline, are much more important factors in determining salary. 
+
 
 ### Part C
 
 ```{r}
-library(ggplot2)
-library(ggfortify)
-autoplot(model1, smooth.colour = NA)
+library("ggplot2")
+library("ggfortify")
+autoplot(model1,smooth.color="NA")
 ```
 
 #### i. 
@@ -316,6 +320,7 @@ PI_u = t(x0)%*%beta_hat + tval[2]*sigma_hat* sqrt(1 + t(x0)%*%solve(t(X)%*%X)%*%
 PI = c(PI_l,PI_u)
 PI
 ```
+We notice the analytical results yields the same PI.
 
 ## Problem 3
 
@@ -488,10 +493,9 @@ bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
 
 ### Part A
 
-Not finished with the markup, needs to be made "prettier". Also, may need to show that the matrix is invertible in order to use Shermans formula... Math is correct though
-
 We want to calculate the error of our model when the $i^{th}$ response is removed, i.e.
 $$e_{(-i)} = y_i - \hat{y}_{(-i)} = y_i - x_i^T \hat\beta_{(-i)}$$
+The estimator for beta with the $i^{th}$ response removed is unknown, so we must find an expression for it. We start by noticing that
 $$\hat\beta = (X^TX)^{-1}X^TY \qquad \text{and}$$
 $$ \qquad \hat\beta_{(-i)} = (X_{(-i)}^TX_{(-i)})^{-1}X_{(-i)}^Ty_{(-i)} \quad \text{(a)}$$
 Since the estimator of beta without the $i^{th}$ response is unknown, we need to express it in terms of known variables. First, using the Sherman-Morris formula, we find that:
@@ -518,7 +522,7 @@ y_i - \hat{y}_{(-i)} &= y_i - x_i^T \hat\beta_{(-i)} \\
 &= y_i -\hat{y}_i + \frac{h_i}{1-h_i}(y_i-\hat{y}_i) \\
 &= \frac{y_i-\hat{y}_i}{1-h_i}
 \end{align*}
-Finally, the LOOCV is calculated by the RSS of the error, so:
+Finally, the LOOCV is calculated by the RSS of the error $e_{(-i)}$, so:
 $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
 
 
