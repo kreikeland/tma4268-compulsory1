@@ -493,13 +493,12 @@ bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
 
 ### Part A
 
-Not finished with the markup, needs to be made "prettier". Also, may need to show that the matrix is invertible in order to use Shermans formula... Math is correct though
-
 We want to calculate the error of our model when the $i^{th}$ response is removed, i.e.
 $$e_{(-i)} = y_i - \hat{y}_{(-i)} = y_i - x_i^T \hat\beta_{(-i)}$$
+The estimator for beta with the $i^{th}$ response removed is unknown, so we must find an expression for it. We start by noticing that
 $$\hat\beta = (X^TX)^{-1}X^TY \qquad \text{and}$$
 $$ \qquad \hat\beta_{(-i)} = (X_{(-i)}^TX_{(-i)})^{-1}X_{(-i)}^Ty_{(-i)} \quad \text{(a)}$$
-Since the estimator of beta without the $i^{th}$ response is unknown, we need to express it in terms of known variables. First, using the Sherman-Morris formula, we find that:
+Using the Sherman-Morris formula, we find that:
 \begin{align}
 (X_{(-i)}^TX_{(-i)})^{-1} &= (X^TX - x_i x_i^T)^{-1} \\
 &= (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-x_i^T(X^TX)^{-1}x_i} \\
@@ -523,7 +522,7 @@ y_i - \hat{y}_{(-i)} &= y_i - x_i^T \hat\beta_{(-i)} \\
 &= y_i -\hat{y}_i + \frac{h_i}{1-h_i}(y_i-\hat{y}_i) \\
 &= \frac{y_i-\hat{y}_i}{1-h_i}
 \end{align}
-Finally, the LOOCV is calculated by the RSS of the error, so:
+Finally, the LOOCV is calculated by the RSS of the error $e_{(-i)}$, so:
 $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
 
 
