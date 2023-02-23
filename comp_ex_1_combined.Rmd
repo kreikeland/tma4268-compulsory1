@@ -1,8 +1,10 @@
 ---
 title: "Compulsory Exercise 1"
-authors: "Chester Henry Charlton, Kasper, Tinus"
-date: '2023-02-08'
-output: html_document
+authors: Chester Henry Charlton, Kasper, Tinus
+date: "2023-02-08"
+output:
+  pdf_document: default
+  html_document: default
 ---
 ## Setup
 ```{r, include=FALSE}
@@ -15,6 +17,7 @@ require("class")
 require("pROC") 
 require("plotROC") 
 require("ggmosaic")
+install.packages("readr")
 ```
 TO DO:
 2.a.ii
@@ -162,32 +165,35 @@ GGally::ggpairs(Salaries)
 # Fit full model
 model1 <- lm(salary ~ ., data = Salaries)
 summary(model1)
-
-
 ```
 
 ### Part A
 
 i. The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
 
-ii. 
+ii. Analysis of variance
 ```{r}
-# var.test()
+anova(model1)[1,]
 ```
+Through an analysis of variance it is clear that the p-value for the F-statistic shows a significant variance between salary and rank, showing there is a strong correlation between the two.
 
 ### Part B
 
 ```{r}
-sex_model <- lm(salary ~ sex, data = Salaries)
-summary(sex_model)
+par(mfrow=c(1,3))   # set the plotting area into a 1*3 array
+boxplot(salary~sex,data=Salaries,ylim=c(75000,175000))
+boxplot(salary~rank,data=Salaries,ylim=c(75000,175000))
+boxplot(salary~discipline,data=Salaries,ylim=c(75000,175000))
 ```
+The linear regression model considers correlation between parameters based on which covariates are included. When looking at sex_model, there is a noticeable difference between the salaries for males and females, suggesting that gender makes a sufficient impact on salary. However, when compared to other covariates in model1, such as rank and discipline, are much more important factors in determining salary. 
+
 
 ### Part C
 
 ```{r}
-library(ggplot2)
-library(ggfortify)
-autoplot(model1, smooth.colour = NA)
+library("ggplot2")
+library("ggfortify")
+autoplot(model1,smooth.color="NA")
 ```
 
 i. For robust linear regression, the following assumptions must be satisfied:
@@ -270,7 +276,9 @@ This analysis bodes very well for the degree to which our model can predict the 
 
 
 ### Part F
-Below is Bert-Ernie's incorrect code:
+
+
+i. Below is Bert-Ernie's corrected code. His mistakes were that he should have used a prediction interval instead of a confidence interval. He also should have used a 90% interval instead of a 0.975% to ensure a 95% certainty for the lower limit.
 ```{r}
 # Make a data frame containing two new observations, corresponding to
 # Bert-Ernie's two possible futures
@@ -290,15 +298,13 @@ preds
 preds[1, 2] > 75000
 ```
 
-i.
-
 ii. Analytical expression for the prediction interval: 
 $$
 \Big[ \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}-t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0}, 
 \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}+t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0} \Big]
 $$
 
-Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes.
+Now we can implement this interval in R analytically, noting that a 90% prediction interval gives a 95% prediction for our lower bound.
 ```{r}
 X = model.matrix(model1)
 beta_hat = coef(model1)
@@ -312,13 +318,7 @@ PI_u = t(x0)%*%beta_hat + tval[2]*sigma_hat* sqrt(1 + t(x0)%*%solve(t(X)%*%X)%*%
 PI = c(PI_l,PI_u)
 PI
 ```
-
-
-
-Write to statlearn project
-
-
-
+We notice the analytical results yields the same PI.
 
 ## Problem 3
 
