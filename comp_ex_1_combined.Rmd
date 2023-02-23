@@ -7,7 +7,7 @@ output:
   html_document: default
 ---
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning = FALSE}
 library("knitr") 
 library("ggplot2") 
 library("dplyr")
@@ -47,6 +47,7 @@ We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\b
 &= \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W}
 \end{align*}
 since ${\bf W}$ is symmetric.
+
 ### Part B
 Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have that 
 \begin{align*}
@@ -79,6 +80,10 @@ We can calculate the mean squared error of a particular observation by decomposi
                &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0} + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \sigma^2 \\
 \end{align*}
 
+
+
+### Part E
+
 ```{r}
 id <- "1X_8OKcoYbng1XvYFDirxjEWr7LtpNr1m" # google file ID
 values <- dget(sprintf("https://docs.google.com/uc?id=%s&export=download", id))
@@ -88,7 +93,6 @@ beta <- values$beta
 sigma <- values$sigma
 ```
 
-### Part E
 
 ```{r, fig.width=4, fig.height=3}
 bias <- function(lambda, X, x0, beta) {
@@ -203,8 +207,9 @@ autoplot(model2, smooth.colour = NA)
 
 
 ### Part D
-Here we implement a model with an interaction term between sex and yrs.since.phd
+
 #### i.
+Here we implement a model with an interaction term between sex and yrs.since.phd
 ```{r}
 model3 <- lm(log_salary ~ . + sex*yrs.since.phd, data = Salaries[,-6])
 ```
@@ -235,6 +240,7 @@ for (i in 1:N) {
 sd(estimator)
 ```
 #### ii. 
+
 Here we plot the distribution of $R^2$ values obtained through the bootstrap.
 ```{r, message=FALSE, fig.width=5, fig.height=3}
 ggplot(data.frame(r2=estimator), aes(x=r2)) + 
@@ -243,14 +249,16 @@ ggplot(data.frame(r2=estimator), aes(x=r2)) +
   theme_minimal()
 ```
 
+
 #### iii.
+
+The standard error (empirical standard deviation) is $\approx 0.00206$. Furthermore, the 95 percent quantile interval is approximately from 0.978 to 0.986, as computed below.
 ```{r}
 sd(estimator)
 quantile_vector <- c(0.025,0.975)
 quantile(estimator,quantile_vector)
 ```
 
-The standard error (empirical standard deviation) is $\approx 0.00206$. Furthermore, the 95 percent quantile interval is approximately from 0.978 to 0.986. 
 
 #### iv.
 This analysis bodes very well for the degree to which our model can predict the data. Even on the low end of the 95 percent quantile interval, our model captures 97.8 percent of the variation in the salary variable, which is quite good. 
@@ -398,7 +406,7 @@ In this case, we are concerned with prediction, since our main goal is to develo
 #### ii. 
 Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
 Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
-For both of these statistics, we prefer them to be as close to $1$ as possible. 
+For both of these statistics, we prefer them to be as close to $1$ as possible. Below are the confusion matrices and their accompanying code. 
 
 ```{r}
 logistic_confusion <- table(bigfoot_logistic_pred, test$class)
@@ -432,19 +440,58 @@ df_ss
 ```
 
 
-#### iii.
+#### iii. 
+Here we present the ROC plots for three models:
 ```{r, message=FALSE, fig.height=3,fig.width=4}
 bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, 
-                            plot = TRUE, print.auc = TRUE)
+                            plot = FALSE, print.auc = FALSE)
 bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], 
-                       plot = TRUE, print.auc = TRUE)
+                       plot = FALSE, print.auc = FALSE)
 
 probKNN <- ifelse(bigfoot_knn_pred == 0,
                   1 - attributes(bigfoot_knn_pred)$prob,
                   attributes(bigfoot_knn_pred)$prob)
-bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = TRUE, print.auc = TRUE)
+bigfoot_knn_roc <- roc(test$class ~ probKNN, plot = FALSE, print.auc = FALSE)
+
+
+# make df's for each model's ROC data:
+logistic_roc_df <- data.frame(specificities = bigfoot_logistic_roc$specificities, sensitivities =
+                                bigfoot_logistic_roc$sensitivities)
+
+qda_roc_df <- data.frame(specificities = bigfoot_qda_roc$specificities, sensitivities = bigfoot_qda_roc$sensitivities)
+
+knn_roc_df <- data.frame(specificities = bigfoot_knn_roc$specificities, sensitivities = bigfoot_knn_roc$sensitivities)
+
+
+
+# plot each model's ROC data, including AUC:
+ggplot(logistic_roc_df, aes(x = specificities, y = sensitivities)) +
+  geom_line(color = "hotpink") +
+  ggtitle(paste("ROC for Logistic Bigfoot Classifier \nAUC =", round(bigfoot_logistic_roc$auc,3))) +
+  scale_x_reverse() +
+  labs(x = "Specificity", y = "Sensitivity") +
+  theme_minimal() 
+
+ggplot(qda_roc_df, aes(x = specificities, y = sensitivities)) +
+  geom_line(color = "darkcyan") +
+  ggtitle(paste("ROC for QDA Bigfoot Classifier \nAUC =", round(bigfoot_qda_roc$auc,3))) +
+  scale_x_reverse() +
+  labs(x = "Specificity", y = "Sensitivity") +
+  theme_minimal() 
+
+ggplot(knn_roc_df, aes(x = specificities, y = sensitivities)) +
+  geom_line(color = "chartreuse4") +
+  ggtitle(paste("ROC for KNN Bigfoot Classifier \nAUC =", round(bigfoot_knn_roc$auc,3))) +
+  scale_x_reverse() +
+  labs(x = "Specificity", y = "Sensitivity") +
+  theme_minimal() 
+
+
+
 ```
 
+#### iv.
+For a classification model such as this, we want the highest possible sensitivity, specificity, and AUC. Based on these measures, we can see that the logistic model is strictly worse than QDA and KNN, with lower sensitivity and specificity. QDA and KNN are closer in their sensitivity and specificity metrics, but we can also use the AUC. In this sense, KNN (AUC = `r round(bigfoot_knn_roc$auc,3)`) is the clear winner, since it has a drastically higher AUC than QDA (AUC = `r round(bigfoot_qda_roc$auc,3)`). What this means is that when we change the classification threshold to get a higher sensitivity, we sacrifice less specificity in our KNN model than we do in our QDA model. In conclusion we would choose the KNN model, especially considering the fact that our value for $k$ was set arbitrarily and could be optimized to get an even better AUC, sensitivity and specificity. 
 
 ## Problem 4
 
