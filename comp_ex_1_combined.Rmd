@@ -23,41 +23,41 @@ require("ggmosaic")
 
 ### Part A
 We calculate the expected value of $\tilde{\boldsymbol \beta}$ as follows:
-\begin{align}
+\begin{align*}
 \text{E}(\tilde{\boldsymbol \beta}) &= \text{E}[(\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{Y}] \\
 &= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \text{E}(\mathbf{Y}) \\
                \mathbf{Y} &= \mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon} \\
              \text{E}(\mathbf{Y})&= \text{E}(\mathbf{X}{\boldsymbol \beta} + {\boldsymbol \varepsilon}) \\
                  &= \mathbf{X}{\boldsymbol \beta} \\
 \text{E}(\tilde{\boldsymbol \beta}) &= (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top \mathbf{X} {\boldsymbol \beta}
-\end{align}
+\end{align*}
 Furthermore, we calculate the variance-covariance of $\tilde{\beta}$ as follows:
 We have that $\text{Var}({\bf Y}) = \text{Var}({\bf X} {\boldsymbol \beta} + {\boldsymbol \varepsilon}) = \text{Var}({\boldsymbol \varepsilon}) = \sigma^2$. Defining ${\bf W} = (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1}$ we compute the variance-covariance matrix $\text{Var}(\tilde{\boldsymbol \beta})$ as
 
-\begin{align}
+\begin{align*}
 \text{Var}(\tilde{\boldsymbol \beta}) 
 &= \text{Var}({\bf W}\mathbf{X}^\top {\bf Y} ) \\
 &= {\bf W}\mathbf{X}^\top \text{Var}({\bf Y})({\bf W}\mathbf{X}^\top)^\top \\
 &= \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W}
-\end{align}
+\end{align*}
 
 since ${\bf W}$ is symmetric.
 
 ### Part B
 Given $\tilde{f}({\bf x_0}) = {\bf x_0}^\top\tilde{\boldsymbol \beta}$ we have that 
-\begin{align}
+\begin{align*}
 \text{E}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{E}(\tilde{\boldsymbol \beta})  \\
 &= {\bf x_0}^\top (\mathbf{X}^\top\mathbf{X}+\lambda {\bf I})^{-1} \mathbf{X}^\top\mathbf{X} {\boldsymbol \beta}  \\
-\end{align}
+\end{align*}
 
 and
 
-\begin{align}
+\begin{align*}
 \text{Var}(\tilde{f}({\bf x_0})) 
 &= {\bf x_0}^\top \text{Var}(\tilde{\boldsymbol \beta}) {\bf x_0} \\
 &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0}
-\end{align}
+\end{align*}
 
 ### Part C
 
@@ -69,13 +69,13 @@ Irreducible error is the "noise" in our data that results from the fact that our
 
 ### Part D
 We can calculate the mean squared error of a particular observation by decomposing it as the sum of the variance, squared bias, and standard deviation at a particular point. We already have expressions for the variance from part b and the standard deviation is known. Therefore, we need only derive the expression for the squared bias at a particular point, and then substitute.
-\begin{align}
+\begin{align*}
 \text{Bias}^2 &= \text{E}(\mathbf{y}_0 - \tilde{f}(\mathbf{x}_0))\\
 &= \mathbf{x}_0^\top {\boldsymbol \beta} - \mathbf{x}_0^\top \text{E}({\boldsymbol \beta})\\
 \text{MSE}(\mathbf{Y}-\hat{\mathbf{Y}}) &= \text{Var}(\hat{\mathbf{Y}}) + \text{Bias}^2(\hat{\mathbf{Y}}) + \mathbf{Var}({\boldsymbol \varepsilon}) \\
                &= \text{Var}(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \text{Var}({\boldsymbol \varepsilon})\\
                &= {\bf x_0}^\top \sigma^2{\bf W}\mathbf{X}^\top\mathbf{X}{\bf W} {\bf x_0} + \text{Bias}^2(\mathbf{x}_0^\top \tilde{\boldsymbol \beta}) + \sigma^2 \\
-\end{align}
+\end{align*}
 
 
 
@@ -495,29 +495,29 @@ $$e_{(-i)} = y_i - \hat{y}_{(-i)} = y_i - x_i^T \hat\beta_{(-i)}$$
 $$\hat\beta = (X^TX)^{-1}X^TY \qquad \text{and}$$
 $$ \qquad \hat\beta_{(-i)} = (X_{(-i)}^TX_{(-i)})^{-1}X_{(-i)}^Ty_{(-i)} \quad \text{(a)}$$
 Since the estimator of beta without the $i^{th}$ response is unknown, we need to express it in terms of known variables. First, using the Sherman-Morris formula, we find that:
-\begin{align}
+\begin{align*}
 (X_{(-i)}^TX_{(-i)})^{-1} &= (X^TX - x_i x_i^T)^{-1} \\
 &= (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-x_i^T(X^TX)^{-1}x_i} \\
 &= (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-h_i} \quad \text{(b)} \\
-\end{align}
+\end{align*}
 
 It is also known that
 $$X_{(-i)}^Ty_{(-i)} = X^TY-x_iy_i \quad \text{(c)}$$
 With this we can substitute (b) and (c) into (a), giving:
-\begin{align}
+\begin{align*}
  \hat\beta_{(-i)} &= \left[ (X^TX)^{-1}+\frac{(X^TX)^{-1}x_ix_i^T(X^TX)^{-1}}{1-h_i} \right] (X^TY-x_iy_i)\\
 &= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i(1-h_i)-x_i^T\hat\beta+h_iy_i)\\
 &= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-x_i^T\hat\beta) \\
 &= \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-\hat{y}_i)
-\end{align}
+\end{align*}
 
 Which, when substituted into the error equation gives:
-\begin{align}
+\begin{align*}
 y_i - \hat{y}_{(-i)} &= y_i - x_i^T \hat\beta_{(-i)} \\
 &= y_i - x_i^T \left( \hat\beta - \frac{(X^TX)^{-1}x_i}{1-hi}(y_i-\hat{y}_i) \right) \\
 &= y_i -\hat{y}_i + \frac{h_i}{1-h_i}(y_i-\hat{y}_i) \\
 &= \frac{y_i-\hat{y}_i}{1-h_i}
-\end{align}
+\end{align*}
 Finally, the LOOCV is calculated by the RSS of the error, so:
 $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \left( \frac{y_i-\hat{y}_i}{1-h_i} \right)^2$$
 
