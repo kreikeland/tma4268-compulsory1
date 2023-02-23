@@ -16,12 +16,6 @@ require("pROC")
 require("plotROC") 
 require("ggmosaic")
 ```
-TO DO:
-2.a.ii
-2.b
-2.f.ii
-4.a (finish)
-
 
 ## Problem 1
 
@@ -169,9 +163,10 @@ summary(model1)
 
 ### Part A
 
-i. The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
+#### i. 
+The lm() function encodes for these categorical variables by operating under the assumption that each instance of the covariate "rank" must be one of the following classes: AssocProf, AsstProf, and Prof. Then it assigns a two binary variables to two of those classes, let us say AssocProf and Prof. This designates AsstProf as the "reference" class, to which the predictions about AsstProf and Prof are made relatively to. 
 
-ii. 
+#### ii. 
 ```{r}
 # var.test()
 ```
@@ -191,7 +186,8 @@ library(ggfortify)
 autoplot(model1, smooth.colour = NA)
 ```
 
-i. For robust linear regression, the following assumptions must be satisfied:
+#### i. 
+For robust linear regression, the following assumptions must be satisfied:
 
 1. $E(\epsilon_i) = 0$
 2. $Var(\epsilon_i)=\sigma^2$
@@ -205,7 +201,7 @@ Normal Q-Q Plot:  The normal Q-Q plot looks okay, maybe with a bit of deviation 
 Scale-Location Plot: We are looking to see if there is any trend, and there does appear that there is a positive trend. So we conclude that the errors are not homoscedastic, violating one of our assumptions. 
 Residuals vs Leverage: There are no points of extreme leverage to note. We would be looking for points in the top right or bottom right corners. 
 
-ii. 
+#### ii. 
 By taking the log of the response variable (salary), we have improved the Q-Q plot a bit, but dissapointingly have not improved the scale-location plot, which was the main issue. 
 ```{r}
 Salaries$log_salary <- log(Salaries$salary)
@@ -217,12 +213,12 @@ autoplot(model2, smooth.colour = NA)
 
 ### Part D
 Here we implement a model with an interaction term between sex and yrs.since.phd
-i.
+#### i.
 ```{r}
 model3 <- lm(log_salary ~ . + sex*yrs.since.phd, data = Salaries[,-6])
 ```
 
-ii.
+#### ii.
 As we can see, Bernie's hypothesis is not correct. Adding an interaction between sex and yrs.since.phd does not improve the significance of the correlation between log_salary and sex.
 ```{r}
 summary(model2)
@@ -231,7 +227,9 @@ summary(model3)
 
 
 ### Part E
-i. Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
+
+#### i. 
+Here we will implement bootstrapping to get information about our uncertainty of the $R^2$ value in our model. 
 ```{r}
 require(dplyr)
 set.seed(4268)
@@ -246,7 +244,8 @@ for (i in 1:N) {
 }
 sd(estimator)
 ```
-ii. Here we plot the distribution of $R^2$ values obtained through the bootstrap.
+#### ii. 
+Here we plot the distribution of $R^2$ values obtained through the bootstrap.
 ```{r}
 # library & data
 library(ggplot2)
@@ -258,7 +257,7 @@ ggplot(data.frame(r2=estimator), aes(x=r2)) +
   theme_minimal()
 ```
 
-iii.
+#### iii.
 ```{r}
 sd(estimator)
 quantile_vector <- c(0.025,0.975)
@@ -267,15 +266,15 @@ quantile(estimator,quantile_vector)
 
 The standard error (empirical standard deviation) is $\approx 0.00206$. Furthermore, the 95 percent quantile interval is approximately from 0.978 to 0.986. 
 
-iv.
+#### iv.
 This analysis bodes very well for the degree to which our model can predict the data. Even on the low end of the 95 percent quantile interval, our model captures 97.8 percent of the variation in the salary variable, which is quite good. 
 
 
 ### Part F
 
-i. 
+#### i. 
 
-Below is Bert-Ernie's code, corrected:
+Below is Bert-Ernie's code, corrected. We have changed the interval to a prediction interval since we are only predicted one value. We have changed the confidence level to 0.9 in order to achieve a 95% one-sided confidence interval. Note that with the corrected code, Bert-Ernie can still be confident about his salary regardless of which option he chooses. 
 ```{r}
 # Make a data frame containing two new observations, corresponding to
 # Bert-Ernie's two possible futures
@@ -295,13 +294,14 @@ preds
 preds[1, 2] > 75000
 ```
 
-ii. Analytical expression for the prediction interval: 
+#### ii. 
+Analytical expression for the prediction interval: 
 $$
 \Big[ \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}-t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0}, 
 \boldsymbol {x}_0^T\hat{\boldsymbol{\beta}}+t_{n-p}(1-0.1/2)\hat{\sigma}\sqrt{1+\boldsymbol{x}_0^T(X^TX)^{-1} \boldsymbol{x}_0} \Big]
 $$
 
-Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes.
+Now we can implement this interval in R, noting that we only take the lower bound for the Bert-Ernie's purposes. The result is identical to the one we received using r-functions.
 ```{r}
 X = model.matrix(model1)
 beta_hat = coef(model1)
@@ -315,13 +315,6 @@ PI_u = t(x0)%*%beta_hat + tval[2]*sigma_hat* sqrt(1 + t(x0)%*%solve(t(X)%*%X)%*%
 PI = c(PI_l,PI_u)
 PI
 ```
-
-
-
-Write to statlearn project
-
-
-
 
 ## Problem 3
 
@@ -364,7 +357,7 @@ test <- bigfoot[-train_ind, ]
 
 ### Part A
 
-i.
+#### i.
 Here we fit a logistic model and note that 441 observations were classified in the "A" category. 299 of these were correct identifications. 
 ```{r}
 bigfoot_logistic <- glm(class ~ ., data = train, family = binomial)
@@ -382,11 +375,13 @@ colnames(logistic_confusion) <- c('true B','true A')
 logistic_confusion
 ```
 
-ii. We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
+#### ii. 
+We multiply the odds by `r exp(coef(bigfoot_logistic )['sawTRUE'])`  (option 4)
 
 ### Part B
 
-i. The following code implements a QDA model:
+#### i. 
+The following code implements a QDA model:
 ```{r}
 require(MASS)
 bigfoot_qda <- qda(class ~ ., data = train)
@@ -405,7 +400,7 @@ qda_confusion
 
 We note that 626 observations in the test set were identified as class "A", of which 389 were correct identifications. 
 
-ii. 
+#### ii. 
 
 1. True: The main difference between QDA and LDA is that QDA assumes that each class has its own covariance matrix.
 
@@ -417,7 +412,7 @@ ii.
 
 ### Part C
 
-i.
+#### i.
 The code below implements KNN classification for k=25. 
 ```{r}
 bigfoot_knn_pred <- knn(train=train, test=test, cl=train$class, k = 25, prob = TRUE)
@@ -430,13 +425,19 @@ colnames(knn_confusion) <- c('true B','true A')
 knn_confusion
 ```
 
-ii. We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
+#### ii. 
+We may employ CV to choose $K$ and test the predictive power of different values for $K$. As $K$ increases, the bias increases, and variance decreases. As $K$ decreases, the variance increases and bias decreases, resulting in a highly nonlinear decision border. 
 
 ### Part D
 
-i. In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
+#### i. 
+In this case, we are concerned with prediction, since our main goal is to develop a model so that we can assess whether future observations are truly those of bigfoot given their features. None of the models we have created are irreconcilable with this goal. However, for inference we generally want models that are more interpretable and allow us to more clearly see which predictors are associated with the response. In this sense, we would prefer linear models such as LDA, since the goal is understanding of the relation. Also, for inference we would probably want to avoid KNN, since it is very uninterpretable. For prediction, the opposite is true. We want to maximize how accurately we can predict the response, even if that sacrifices interpretability. So for that we would choose more complex models such as QDA or KNN. However, I would not say that this excludes any models, supposing that they can give good predictions. 
 
-ii. 
+#### ii. 
+Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
+Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
+For both of these statistics, we prefer them to be as close to $1$ as possible. 
+
 ```{r}
 # # logistic model confusion table
 # logistic_confusion <- table(bigfoot_logistic_test_pred, test$class)
@@ -468,11 +469,9 @@ knn_confusion
 knn_sensitivity
 knn_specificity
 ```
-Sensitivity refers to the probability (based on the test set error) that an observation is marked as positive, given that it is actually positive. So in this case it can be stated as "the probability that we predict an observation is of bigfoot, given that it truly is."
-Specificity refers to the probability (based on the test set) that an observation is marked as negative, given that it is actually negative. So in this case it can be stated as "the probability that we predict an observation is not of bigfoot, given that it truly is not."
-For both of these statistics, we prefer them to be as close to $1$ as possible. 
 
-iii.
+
+#### iii.
 ```{r}
 bigfoot_logistic_roc <- roc(test$class ~ bigfoot_logistic_test_probs, plot = TRUE, print.auc = TRUE)
 bigfoot_qda_roc <- roc(test$class ~ bigfoot_qda_test_probs$posterior[,1], plot = TRUE, print.auc = TRUE)
@@ -524,13 +523,17 @@ $$\text{CV} = \frac{1}{N} \sum_{i=1}^N e_{(-i)}^2 = \frac{1}{N} \sum_{i=1}^N \le
 
 ### Part B
 
-i. False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
+#### i. 
+False: LOOCV results in very low bias but high variance, since it has more nearly the maximum number of observations in its training set (n-1). The bias of K-fold CV will converge (in a decreasing manner) to the bias of LOOCV as k approaches n, 
 
-ii. False: Polynomial regression is explicitly one of the conditions for which the formula in part A is valid (see p.202 ISLR)
+#### ii. 
+False: Polynomial regression is explicitly one of the conditions for which the formula in part A is valid (see p.202 ISLR)
 
-iii. True: The formula from part A is valid for linear regression (least squares) and transforming the response variable does compromise this.
+#### iii.
+True: The formula from part A is valid for linear regression (least squares) and transforming the response variable does compromise this.
 
-iv. False: In the validation approach, we train on the training set and then test on the test set, which is equivalent to the first step of the 2-fold CV approach. In the 2-fold CV approach we train on the training set and then test on the test set, but then we switch these sets and train on what was previously the test set and test on what was previously the training set.
+#### iv. 
+False: In the validation approach, we train on the training set and then test on the test set, which is equivalent to the first step of the 2-fold CV approach. In the 2-fold CV approach we train on the training set and then test on the test set, but then we switch these sets and train on what was previously the test set and test on what was previously the training set.
 
 
 
