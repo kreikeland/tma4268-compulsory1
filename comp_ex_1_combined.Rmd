@@ -97,7 +97,8 @@ sigma <- values$sigma
 ```{r, fig.width=4, fig.height=3}
 bias <- function(lambda, X, x0, beta) {
   p <- ncol(X)
-  value <- (t(x0) %*% beta - t(x0) %*% (solve(t(X)%*%X + lambda * diag(p)) %*% (t(X) %*% X) %*% beta))**2
+  value <- (t(x0) %*% beta - t(x0) %*% 
+              (solve(t(X)%*%X + lambda * diag(p)) %*% (t(X) %*% X) %*% beta))**2
   return(value)
 }
 lambdas <- seq(0, 2, length.out = 500)
